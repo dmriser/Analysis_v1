@@ -1,0 +1,9 @@
+JOBNAME: clas_analysis 
+PROJECT: clas 
+TRACK:   simulation 
+
+COMMAND: chmod +x goAnalyze; ./goAnalyze 5
+
+OTHER_FILES: /u/home/dmriser/mydoc/analysis/root_scripts/elastic/farm/goAnalyze 
+/u/home/dmriser/mydoc/analysis/root_scripts/elastic/bin/elastic 
+/u/home/dmriser/mydoc/analysis/root_scripts/elastic/src/files.txt  

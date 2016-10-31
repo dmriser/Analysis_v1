@@ -1,0 +1,18 @@
+*~ 
+*.o 
+
+# big files 
+*.pdf 
+*.png 
+
+.scons* 
+
+*.root
+logfile 
+
+
+# latex 
+*.log
+*.aux
+*.nav
+*.fls

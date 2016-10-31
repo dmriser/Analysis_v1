@@ -1,0 +1,7 @@
+*.o 
+*~ 
+*.log 
+.scons* 
+*.png 
+*.pdf 
+*.root

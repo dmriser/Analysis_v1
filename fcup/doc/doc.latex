@@ -1,0 +1,177 @@
+\documentclass[10pt]{article}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\title{A Summary of Faraday Cup Techniques \& Good Run List Creation}
+\author{David Riser}
+\date{April 2016}
+
+% ------------- document begins ----------------
+\begin{document}
+
+\maketitle
+
+\abstract{ Scattering experiments in particle physics often measure differential and total cross sections.  In order to do so, the number of incoming particles must be determined.  In this
+document steps taken to calculate the electron flux for the e1f dataset (taken in 2003 in Hall-B at Jefferson Lab) are outlined.  Some difficulties are described, and the results are used to
+construct a list of good quality runs.  This list is compared to a good run list by Wes Gohn, done in a previous work. }
+
+% ------------ introduction --------------------
+
+\section*{Introduction \& Motivation}
+
+For a scattering experiment the differential cross section is the number of particles scattered per unit angle, divided by the total number of incoming particles.
+
+\begin{equation}
+	\frac{d\sigma}{d\Omega} = \frac{N_{scattered}}{N_{total}}(\theta, \phi)
+\end{equation}
+
+The total cross section is then determined by an integration over the solid angle.  In order to extract accurate cross sections, the number of scattered particles must be determined accurately, as well as the incoming flux of particles.  \\
+
+The rate at which events occur for a process $x$ can be expressed in terms of the \textbf{luminosity},
+
+\begin{equation}
+	\frac{dN_x}{dt} = L \sigma_x
+\end{equation}
+
+In this analysis, we focus on an electron beam on a proton target, for the uniform and stationary target case, the luminosity is just the number of collisions per unit time per unit area,
+
+\begin{gather}
+	L = \frac{j_e}{e} n_p l_t \\
+	\frac{dN_x}{dt} = \frac{j_e}{e} n_p l_t \sigma_x \\
+	\frac{dN}{dt} = \frac{j_e}{e} n_p l_t \sum_{x} \sigma_x
+\end{gather}
+
+Here, $j_e/e$ is the current of electrons (number per unit time), $n_p$ is the number density of protons in the material, and $l_t$ is the length of the target in the direction of the beam.  The experiment runs for some finite time $\Delta t = t_f - t_i $, which is in practice not relavant, provided that one can calculate the Faraday cup accumulation (explained later).  The total number of events in $\Delta t$ is given by: 
+
+\begin{gather}
+	N_x = \int_{t_i}^{t_f} dt \phi_e n_p l_t \sigma_x \\
+	= n_p l_t \sigma_x \int_{t_i}^{t_f} dt \frac{j_e}{e} \\
+	= n_p l_t \sigma_x N_e
+\end{gather}
+
+Where $N_e$ is the electron flux integrated over the experimental time $\Delta t$ giving the total number of electrons.  The cross section is then,
+
+\begin{gather}
+	\sigma_x = \frac{N_x}{n_p l_t N_e} \\
+	= \frac{N_x}{n_p l_t \int_{t_i}^{t_f} dt \frac{j_e}{e}}
+\end{gather}
+
+The majority of electrons don't interact with the target, and pass downstream into the Faraday Cup.  The Faraday cup is a huge block of iron (4 ton), that is hooked up to a charge deposition monitoring circuit.  The number of electrons deposited into the Faraday cup in a time $\Delta t$ is simply given by $N_e = \Delta Q / e$, where e is the electron charge, and $\Delta Q$ is the change in charge on the Faraday cup in the time $\Delta t$.  Our cross section measurement can now be related to the \textbf{Faraday cup accumulated charge} $\Delta Q$,
+
+\begin{gather}
+	\sigma_x = \frac{N_x}{n_p l_t N_e} \\
+	= \frac{e N_x}{n_p l_t \Delta Q}
+\end{gather}
+
+It is now clear how to use Faraday cup accumulated charge $\Delta Q$ in the calculation of cross sections, what remains to be shown is how $\Delta Q$ can be used to check data quality.  Consider for example the liquid hydrogen target boils, causing a change in the proton number density $n_p$.  In this case, electrons still accumulate on the Faraday cup at the same rate, but the number of events plummets because the luminosity has been decreased (lower proton number density).  This reasoning inspires the inspection of the ratio of events to charge accumulation.
+
+\begin{gather}
+	N_x = \frac{ \Delta Q n_p l_t \sigma_x }{ e } \\
+	\frac{N_x}{\Delta Q} = \frac{ n_p l_t \sigma_x }{ e } 
+\end{gather}
+
+If the beam energy stays fixed, $\sigma_x (E)$ stays fixed.  If the target is stable, $n_p$ is fixed, and regardless of the beam current or experiment time, this ratio is expected to be constant from run to run.  This ratio has been calculated for each availble run, and the distribution is used to create a good run list for the dataset.
+
+% ------------------ data storage and discussion of extraction of the scalar readings and event numbers ------------------
+
+\section*{ DAQ \& Event Structure in .bos Files }
+
+The CLAS data aquisition system outputs a raw data format called .bos, which consists of different banks providing information about the run.  The Faraday cup is not recorded with each trigger (recorded event), but periodically in a scalar reading bank called TGRS.  The event number for every trigger is recorded in the HEAD bank of the bos file.  The TRGS bank has different Faraday cup entries for gated (stop writing when events arent being saved) and ungated operation modes. The Faraday cup entries are scaled by the DAQ, (multiplied by some number) and are recorded in micro-Colombs ($\mu C$).  \\
+
+The typical software chain employed by CLAS consists of running a reconstruction software (user\_ana) on the raw .bos files which takes the raw signal information, and converts it to tracks and particles.  This information is saved in ntuple data structures and converted for analysis in paw, root, or maybe even jroot (CLAS12 analysis package written in Java) format.  \\
+
+The .root files used in this analysis do not contain the Faraday cup charge information, thus manually retrieving it from the raw .bos was necessary.
+
+\section*{ Getting Faraday Cup \& Event Readings From .bos Files }
+
+One can manually dump the banks from a .bos raw or reconstructed datafile using the utility called bosdump.  In this analysis, the TRGS and HEAD banks were extracted, and the entire output was saved into a temporary text file.  The content of these text files is then filtered with a PERL script which has three main functions.
+
+\begin{enumerate}
+	\item find and extract the values of FCUP\_G2
+	\item find the next HEAD bank event number entry following the scalar entry
+	\item write these as columns into a file
+\end{enumerate}
+
+These files are then processed further using c++.  One file is produced for every single file in the mss. (clas\_xxxxxx.Ayy)
+
+% ----------------------- processing with c++  ----------------------------
+
+\section*{Calculating $\Delta Q$ for each run}
+
+The first check performed was to plot the values of Faraday cup charge for every entry, run by run.  These results can be found in pdf format at: https://userweb.jlab.org/~dmriser/e1f/normalization/accumulation.pdf.  These checks showed that the Faraday cup charge does not decrease, or change sign at any time during any of the runs (as expected).  At times the Faraday cup charge does not increase, these occasions will add nothing to $\Delta Q$, and if events are occuring in these areas, the ratio study (number of events over accumulation) will show enlarged values for these runs.
+
+Calculating $\Delta Q$ for each run is complicated by several factors:
+
+\begin{itemize}
+	\item accumulation between the last scalar entry of each file and the beginning of the next
+	\item occasions when a file is missing, and linking two files is not possible
+	\item accumulation before the first scalar entry of the run, and after as well
+\end{itemize}
+
+With these factors in mind, the method was chosen for calculating Faraday accumulation for each run.  First, every scalar reading of Faraday cup charge in a run was loaded into a vector, this includes all files for the run even if there are jumps (.A00, .A01, .A05).  The event numbers for each entry is saved into a second vector, and the stub (.AYY) is saved into a 3rd vector of the same length.  So long as the stub number does not increase by more than one between readings, the difference between two adjacent elements is added to the $\Delta Q$ accumulation total for the run.  If the two adjacent files are not sequential (and we do not have the files in between) the difference between the last entry of the first file and the first entry of the second is not added to the total.  In this way we avoid adding large spikes of accumulation into our total.  The events from these files are obviously also not present in the analysis, so one doesn't need to throw any events away in this case.  The downside is that we lose a few events in the end and beginning of each file.  It's anticipated that this effect will be small.  This is one point to which a return could be made, and one could throw out events after the last and before the first. \\
+
+In summary, the accumulation is calculated entry by entry, skipping gaps between files, and is recorded in a file for each run.  In case of need, the accumulation is also saved for each file, but the sum of these is not expected to be equal to the run total, because of the first and last reading effect.
+
+% --------------- using accumulation information to check the data -----------------------
+
+\section*{ Using $\Delta Q$ as Quality Control }
+
+As outlined above, one can use the ratio $\Delta N / \Delta Q$ to throw out runs with atypical variations in the target number density, and cross section.  For this analysis electron identification code
+was created by Nathan Harrison and Wes Gohn.  In this study the electron identification is reproduced exactly and the number of electrons that pass are counted for each run.  This number is then divided
+by the charge accumulation $\Delta Q$ for that run.  These values are loaded into a histogram and fit with a Gaussian.  Runs are selected within 4 standard deviations of the mean and kept.
+
+\begin{figure}
+	\centering
+		\includegraphics[width=8cm]{../h1_dQ_dN.png}
+		\caption{Histogram for $\Delta N/\Delta Q$, shown with $\pm 4 \sigma$ cut markers.}
+\end{figure}
+
+Any run passing this critera is then added to the good run list.
+
+\section*{ Good Run List}
+
+In creating a good run list, it became evident that we are restricted to only the files which were previously considered good by Wes and Nathan.  This is because all of the reconstructed .bos files and ntuples
+which Nathan has (and are used in this analysis) were done after the good run list was generated by Wes.  The maximum number of good runs for this analysis is then equal to the number of files that Wes considered good.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=8cm]{../g_dN_dQ.png}
+\end{figure}
+
+In order to quantify and compare the two lists, the total number of raw runs in the mass storage system (mss) is considered the set of runs which Wes had access to analyze.  The results are summarized in the table below,
+and the full good run list comparison can be found online at: https://userweb.jlab.org/~dmriser/e1f/normalization/list.txt.
+
+\begin{center}
+	\begin{tabular}{ | c | c | c | }
+	\hline
+			             & This Work & Gohn \\ \hline
+			Runs in MSS &   831 & 831 \\
+			Runs Avail. &  606 & 782 \\
+			Good Runs & 507 & 576 \\
+			\hline
+	\end{tabular}
+\end{center}
+
+\begin{center}
+	\begin{tabular}{| c | c |}
+			  \hline
+			   & Number of Occurances \\ \hline
+			   WG: Y DR: Y & 485 \\
+			   WG: N DR: N & 16 \\
+			   WG: Y DR: N & 84 \\
+			   WG: N DR: Y & 15 \\
+			   WG: Y DR: X & 0 \\
+			   \hline
+	\end{tabular}
+\end{center}
+
+The X in the last box means file not considered.  This is important because it means that no files Wes considered good were not included in the initial sample for this list.
+
+\section*{Summary \& Conclusion}
+
+This analysis has extracted Faraday cup charge information directly from the raw .bos files for e1f.  The data has been carefully processed so as to provide an accurate charge accumulation number for 
+each run.  The runs are then checked for quality using the standard number of events ratio technique, and the good run list is generated.  The good run list which we found eliminates an additional $15\%$ of 
+the dataset, when compared with runs used by Wes Gohn.  It will be possible to calculate cross sections and other distrubutions with both lists and compare results if further validation is required.     
+
+\end{document}

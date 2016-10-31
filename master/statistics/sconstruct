@@ -1,0 +1,6 @@
+import os
+env = Environment(ENV = {'PATH':os.environ['PATH']})
+env.ParseConfig("root-config --glibs --cflags")
+env.Program("go", "statistics.C")
+
+

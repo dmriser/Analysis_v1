@@ -1,0 +1,18 @@
+#!/bin/tcsh 
+
+# environment to run root
+source /group/clas/builds/centos65/environment.csh 
+
+# passed to job
+set N = $1
+
+# starting job 
+echo " goAnalyze initialized, preparing to run binary on $N files... "
+
+# run binary 
+./elastic $N 
+
+set N_ROOT_FILES = `ls -l *.root | wc -l | awk '{print $1}'`
+
+echo " goAnalyze finished with $N_ROOT_FILES on the node ... "
+

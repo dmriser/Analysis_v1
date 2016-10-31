@@ -1,0 +1,11 @@
+import os
+
+env = Environment(ENV = {'PATH':os.environ['PATH']})
+env.ParseConfig("root-config --glibs --cflags")
+env.Append(CCFLAGS = ['-g','-lgfortran']) # -lgfortran needed to link the elastlib.o with c++
+
+elasticSources = ['src/elastic.C','src/elaslib.o']
+
+env.Program('bin/elastic',elasticSources)
+env.Program('bin/allHistograms','src/allHistograms.C')
+

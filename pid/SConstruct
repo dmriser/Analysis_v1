@@ -1,0 +1,8 @@
+import os
+
+env = Environment(ENV = {'PATH':os.environ['PATH']})
+
+env.ParseConfig("root-config --glibs --cflags")
+env.Append(CCFLAGS = ['-g'])
+
+env.Program('PIDHistograms','PIDHistograms.C')

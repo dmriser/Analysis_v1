@@ -1,0 +1,1 @@
+/volatile/clas/clas12/dmriser/analysis/mcdata/root/elasticTest/elasticTest.root
