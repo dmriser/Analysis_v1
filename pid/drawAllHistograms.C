@@ -33,8 +33,7 @@
   string printer = "";
                         
   for (int itype = 0; itype < 11; itype++)
-    for(int isect = 0; isect < 7; isect++)
-      {
+    for(int isect = 0; isect < 7; isect++){
 	// 1d                                                                                                                                                                                                   
 	h1_nphe[itype][isect]          = (TH1D*) file.Get(Form("h1_nphe_%s_%s",type[itype].c_str(),sect[isect].c_str()));
 	h1_nphe[itype][isect]->Draw();
@@ -110,9 +109,5 @@
 	c1->Print(Form("img/h_ec_fid_%s_%s.png",type[itype].c_str(),sect[isect].c_str()));
       }
   // ------------ end histograms ---------------  
-
-
-
-
 
 }

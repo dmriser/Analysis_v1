@@ -31,6 +31,8 @@ using namespace std;
 #include "TH1.h"
 #include "TLorentzVector.h"
 #include "TTree.h"
+#include "TString.h"
+#include "TRegexp.h"
 
 int main (int argc, char * argv[])
 {
@@ -51,7 +53,12 @@ int main (int argc, char * argv[])
   reader.Init(); // set branch addresses
 
   int nEvents = reader.GetEntries();
-  int runno = atoi(reader.GetFilenameChunk(68,6).c_str());
+  //  int runno = atoi(reader.GetFilenameChunk(68,6).c_str());
+
+  TString filename = reader.fchain->GetFile()->GetName();
+  TRegexp runno_regex("[1-9][0-9][0-9][0-9][0-9]");
+  TString srunno = filename( runno_regex );
+  int runno = srunno.Atoi();
 
   // -------------- event quality control --------------------
   bool eventStatus = true;
@@ -97,7 +104,7 @@ int main (int argc, char * argv[])
 
 
   // -------------- NEW TREE FOR ENTRIES --------------------
-  TFile * newNtuple = TFile::Open(Form("/volatile/clas/clas12/dmriser/analysis/e1f_analysis/skim/allGoodEvents/%d.root",runno),"recreate");
+  TFile * newNtuple = TFile::Open(Form("/volatile/clas/clas12/dmriser/analysis/e1f_analysis/debug_jobs2/skim_e2n.%d.root",runno),"recreate");
   TChain * newChain = (TChain*) reader.fchain->CloneTree(0);
   TTree * newTree   = newChain->GetTree();
   // -------------------------------------------------------
@@ -129,26 +136,28 @@ int main (int argc, char * argv[])
 	}
       
       // ----------------------------------------------
-/*
+
       filter.loadEvent(event,GSIM,runno);
       int e_index = filter.getIndexByPID(11);
       if (e_index > -123)
 	{
-	  TLorentzVector recElectron(event.cx[e_index]*event.p[e_index], 
-				     event.cy[e_index]*event.p[e_index],
-				     event.cz[e_index]*event.p[e_index],
-				     event.p[e_index]);
+	  //	  TLorentzVector recElectron(event.cx[e_index]*event.p[e_index], 
+	  //				     event.cy[e_index]*event.p[e_index],
+	  //				     event.cz[e_index]*event.p[e_index],
+	  //				     event.p[e_index]);
 
-	  ElasticEvent recEvent(recElectron);
+	  //	  ElasticEvent recEvent(recElectron);
 
-
+      int numberOfNeutrals = 0;
+      for (int ipart=1; ipart<event.gpart; ipart++){
+	if (event.q[ipart] == 0) numberOfNeutrals++;
+      }
+      
 	  // define the skim options here
 	  //	  if (recEvent.getW() > 1.80 && recEvent.getQQ() > 0.95  && eventStatus) newTree->Fill();
-	  //  if (eventStatus) newTree->Fill();
-
+	  //	  if (eventStatus) newTree->Fill();
+	  if (eventStatus && numberOfNeutrals > 1) newTree->Fill();
 	}
-*/
-      if (eventStatus) newTree->Fill();
 
     }  // end loop over events
 
