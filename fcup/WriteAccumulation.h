@@ -11,8 +11,8 @@
 
 using namespace std; 
 
-class FaradayReader
-{
+class FaradayReader{
+
  private: 
   string title;
   bool hasfile;
@@ -39,22 +39,20 @@ class FaradayReader
 
 };
 
-FaradayReader::FaradayReader(string f)
-{
-  ifstream inputFile(Form("/volatile/clas/clas12/dmriser/analysis/e1f_analysis/fcup/%s.fcup",f.c_str()));
+FaradayReader::FaradayReader(string f){
+
+  ifstream inputFile(Form("/volatile/clas12/dmriser/analysis/e1f_analysis/fcup/%s.fcup",f.c_str()));
 
   if (!inputFile.is_open()){ cout << " Error opening file: " << f << endl; hasfile = false; return;}
   else hasfile = true;
 
   string line;
 
-  while(getline(inputFile, line))
-    {
+  while(getline(inputFile, line)){
       int ien = 0;
       istringstream iss(line); 
       
-      while(iss)
-	{
+      while(iss){
 	  string buffer; 
 	  iss >> buffer; 
 
@@ -63,7 +61,6 @@ FaradayReader::FaradayReader(string f)
 
 	  ien++;
 	}
-
     }
 
   title = f;
@@ -73,8 +70,7 @@ FaradayReader::FaradayReader(string f)
 FaradayReader::~FaradayReader()
 {}
 
-void FaradayReader::print()
-{
+void FaradayReader::print(){
   cout << title << endl;
 
   for (int ien = 0; ien < events.size(); ien++)

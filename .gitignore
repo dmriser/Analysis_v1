@@ -2,3 +2,6 @@
 *.pdf
 *sconsbite*
 *.root 
+*.fca
+*.txt
+*.fcup 

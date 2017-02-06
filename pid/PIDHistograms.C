@@ -33,20 +33,20 @@ public:
   }
   
   // 1-D 
-  TH1D * h1_nphe[11][7];
-  TH1F * h1_ec_edep_inner[11][7];
-  TH1F * h1_ec_edep_outer[11][7];
-  TH1F * h1_p[11][7];
-  TH1F * h1_z_vertex[11][7];
+  TH1D *h1_nphe[11][7];
+  TH1F *h1_ec_edep_inner[11][7];
+  TH1F *h1_ec_edep_outer[11][7];
+  TH1F *h1_p[11][7];
+  TH1F *h1_z_vertex[11][7];
 
   // 2-D 
-  TH2F * h2_cc_theta[11][7];
-  TH2F * h2_etot_p[11][7];
-  TH2F * h2_ang_fid[11][7];
-  TH2F * h2_ec_edep[11][7];
-  TH2F * h2_dcr1_fid[11][7];
-  TH2F * h2_dcr3_fid[11][7];
-  TH2F * h2_ec_fid[11][7];
+  TH2F *h2_cc_theta[11][7];
+  TH2F *h2_etot_p[11][7];
+  TH2F *h2_ang_fid[11][7];
+  TH2F *h2_ec_edep[11][7];
+  TH2F *h2_dcr1_fid[11][7];
+  TH2F *h2_dcr3_fid[11][7];
+  TH2F *h2_ec_fid[11][7];
   
   void Fill(h22Event event, int ipart, int cutType);
   void Save(string outputFilename);
@@ -61,20 +61,20 @@ PIDHistograms::PIDHistograms(){
       for(int isect = 0; isect < 7; isect++)
 	{
 	  // 1d
-	  h1_nphe[itype][isect]          = new TH1D(Form("h1_nphe_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_nphe_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,0,100);
-	  h1_ec_edep_inner[itype][isect] = new TH1F(Form("h1_ec_edep_inner_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_ec_edep_inner_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,0,4);
-	  h1_ec_edep_outer[itype][isect] = new TH1F(Form("h1_ec_edep_outer_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_ec_edep_outer_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,0,4);
-	  h1_p[itype][isect]             = new TH1F(Form("h1_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,0,5);
-	  h1_z_vertex[itype][isect]      = new TH1F(Form("h1_z_vertex_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_z_vertex_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,-35,-15);
+	  h1_nphe[itype][isect]          = new TH1D(Form("h1_nphe_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_nphe_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,0,100);
+	  h1_ec_edep_inner[itype][isect] = new TH1F(Form("h1_ec_edep_inner_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_ec_edep_inner_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,0,4);
+	  h1_ec_edep_outer[itype][isect] = new TH1F(Form("h1_ec_edep_outer_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_ec_edep_outer_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,0,4);
+	  h1_p[itype][isect]             = new TH1F(Form("h1_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,0,5);
+	  h1_z_vertex[itype][isect]      = new TH1F(Form("h1_z_vertex_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h1_z_vertex_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,-35,-15);
 	  
 	  // 2d
-	  h2_cc_theta[itype][isect] = new TH2F(Form("h_cc_theta_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_cc_theta_%s_%s",type[itype].c_str(),sect[isect].c_str()),18,0,17,100,0,60);
-	  h2_etot_p[itype][isect]   = new TH2F(Form("h_etot_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_etot_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,0,5,100,0.05,0.5);
-	  h2_ang_fid[itype][isect]  = new TH2F(Form("h_ang_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_ang_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,-30,30,100,0,60);
-	  h2_ec_edep[itype][isect]  = new TH2F(Form("h_ec_edep_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_ec_edep_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,0.01,1,100,0.01,1);
-	  h2_dcr1_fid[itype][isect] = new TH2F(Form("h_dcr1_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_dcr1_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,-100,100,100,-100,100);
-	  h2_dcr3_fid[itype][isect] = new TH2F(Form("h_dcr3_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_dcr3_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,-500,500,100,-500,500);
-	  h2_ec_fid[itype][isect]   = new TH2F(Form("h_ec_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_ec_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),100,-500,500,100,-500,500);
+	  h2_cc_theta[itype][isect] = new TH2F(Form("h_cc_theta_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_cc_theta_%s_%s",type[itype].c_str(),sect[isect].c_str()),18,0,17,200,0,60);
+	  h2_etot_p[itype][isect]   = new TH2F(Form("h_etot_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_etot_p_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,0,5,200,0.05,0.5);
+	  h2_ang_fid[itype][isect]  = new TH2F(Form("h_ang_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_ang_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,-30,30,200,5,65);
+	  h2_ec_edep[itype][isect]  = new TH2F(Form("h_ec_edep_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_ec_edep_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,0.01,0.5,200,0.01,0.5);
+	  h2_dcr1_fid[itype][isect] = new TH2F(Form("h_dcr1_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_dcr1_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,-100,100,200,-100,100);
+	  h2_dcr3_fid[itype][isect] = new TH2F(Form("h_dcr3_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_dcr3_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,50,400,200,-200,200);
+	  h2_ec_fid[itype][isect]   = new TH2F(Form("h_ec_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),Form("h_ec_fid_%s_%s",type[itype].c_str(),sect[isect].c_str()),200,-500,500,200,-500,500);
 	}
   }
 
@@ -148,15 +148,17 @@ void PIDHistograms::Save(string outputFilename){
 
 int main (int argc, char * argv[])
 {
-  int GSIM = 1;                          // data (0 - false), gsim (1 - true)
+  int GSIM = 0;                          // data (0 - false), gsim (1 - true)
   
   // get number of files from command line 
-  if (argc < 2){ cout << " expected number of files as option " << endl; exit(0);}
+  if (argc < 4){ cout << " Usage: <Number files> <Input list> <Output name> " << endl; exit(0);}
 
   int nFiles = atoi(argv[1]);
  
   // this cant be the skim files, they have too much thrown out to show effect of cuts
-  string files = "mcfiles.txt";
+  //  string files = "allGoodEvents.dat";
+  string files = argv[2];
+  string outputFile(argv[3]);
 
   // setup file reader and add files
   h22Reader reader(GSIM);
@@ -208,7 +210,7 @@ int main (int argc, char * argv[])
       if (iEvent%1000 == 0) { cout << "\r done " << iEvent << " of " << nEvents << flush; }
     }  // end loop over events
 
-  histos.Save("refactorTest.root"); 
+  histos.Save(outputFile); 
 
 
   return 0;

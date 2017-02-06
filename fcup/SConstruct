@@ -3,7 +3,9 @@ import os
 env = Environment(ENV = {'PATH':os.environ['PATH']})
 env.ParseConfig("root-config --glibs --cflags")
 env.Append(CCFLAGS = ['-g'])
+env.Append(CPPPATH = ['$ROOTSYS/include/'], LIBPATH = ['$ROOTSYS/lib/'],LIBS = ['TreePlayer','TMVA','Minuit','XMLIO','MLP'])
 
-env.Program("ratesFBF", "ratesFBF.C")
-env.Program("ratesRBR", "ratesRBR.C")
-env.Program('readFilesWithEntryNumber','readFilesWithEntryNumber.C')
+sources = Glob('*.cxx')
+
+for s in sources:
+    env.Program(s)

@@ -6,6 +6,8 @@ Source code for Faraday Cup studies.
 University of Connecticut 
 	4-5-16
 
+Under Modification: Feb 6, 2017
+
 (i) readFilesWithEntryNumber creates: 
     (a) accumulation for files, and runs by sutracting element by element
     (b) list of bad events, for which dQ = 0 give by STARTN STOPN in text files 

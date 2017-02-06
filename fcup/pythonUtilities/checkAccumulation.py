@@ -3,8 +3,8 @@
 import glob 
 
 # ---------- params ------- 
-testNumber = 38222 
-fPath = '/volatile/clas/clas12/dmriser/analysis/e1f_analysis/fca/'
+testNumber = 382 
+fPath = '/volatile/clas12/dmriser/analysis/e1f_analysis/fca/'
 
 # -------------------------
 
