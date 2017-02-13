@@ -56,25 +56,24 @@ FaradayReader::FaradayReader(string f){
 	  string buffer; 
 	  iss >> buffer; 
 
-	  if (ien == 0) charges.push_back(atoi(buffer.c_str()));
-	  else if (ien == 1) events.push_back(atoi(buffer.c_str()));
+	  if (ien == 0)      charges.push_back(atoi(buffer.c_str()));
+	  else if (ien == 1) events .push_back(atoi(buffer.c_str()));
 
 	  ien++;
 	}
     }
 
   title = f;
-
 }
 
-FaradayReader::~FaradayReader()
-{}
+FaradayReader::~FaradayReader(){
+
+}
 
 void FaradayReader::print(){
   cout << title << endl;
 
-  for (int ien = 0; ien < events.size(); ien++)
-    {
+  for (int ien = 0; ien < events.size(); ien++){
       cout.width(12);
       cout << ien;
 
@@ -89,13 +88,12 @@ void FaradayReader::print(){
 
       cout.width(12);
       cout << events[ien +1] - events[ien] << endl;
-      
     }
+
   cout << endl;
 }
 
-void FaradayReader::print(int ien)
-{
+void FaradayReader::print(int ien){
   cout.width(20);
   cout << title;
   

@@ -3,14 +3,9 @@
   David Riser 
   University of Connecticut 
 
-  Mar 15, 2016
+  Feb 6, 2017
 
   WriteAccumulation.cxx
-
-  Program with strange name because I couldn't think of anything better. This
-  code loads text files from database that contain the scalar bank FCUP_G2 entries
-  and the next head bank event number following the entry. The code below looks at 
-  differences in charge dQ between n_i and n_(i+1) as well as dN event difference.
 
  */
 
@@ -27,11 +22,7 @@ using namespace std;
 // CERN root libs
 #include "TCanvas.h"
 #include "TFile.h"
-#include "TF1.h"
-#include "TGraph.h"
 #include "TH1.h"
-#include "TH2.h"
-
 
 class Writer{
 
@@ -40,16 +31,18 @@ public:
   ~Writer();
 
 protected:
-
   int nNormal, nEventsInNormal, nExceptions, nEventsInException, 
     lastEvent, ifile, nProcessedFiles, pRunNumber, cRunNumber, iEntry, iRunEntry; 
 
   vector<int> runStubs;
   vector<int> runEntries;
   vector<int> runCharges;
+  vector<int> runEntriesGood;
+  vector<int> runChargesGood;
   vector<int> badEventStart;
   vector<int> badEventEnd;
   vector<int> cdiffs;
+  vector<int> eventStatus;
   vector<int> ediffs;
   vector<int> entries;
 
@@ -58,7 +51,6 @@ protected:
   bool BAD;
 
   string ifName, ifTitle;
-
   TFile *outfile;
 
 public:
@@ -68,7 +60,9 @@ public:
   void PerformEndOfRunAction();
   void ProcessFile(FaradayReader fReader);
   void EndJob();
+  long int CalculateTotalCharge();
   bool FileIsNewRun();
+  bool EntryIsGood(int entry);
 };
 
 Writer::Writer(){
@@ -92,15 +86,10 @@ void Writer::Initialize(){
   iEntry             = 0;
   iRunEntry          = 1;
 
-
-  BAD = false;
-  outfile = new TFile("WriteAccumulation_Refactoring.root","recreate");
+  BAD     = false;
+  outfile = new TFile("WriteAccumulationTest.root","recreate");
 }
-
-bool Writer::FileIsNewRun(){
-  return (cRunNumber != pRunNumber && pRunNumber != 0);
-}
-
+  
 void Writer::Execute(int numberOfFiles){
 
   ifstream runs("allfiles.txt"); 
@@ -108,8 +97,8 @@ void Writer::Execute(int numberOfFiles){
   while (getline(runs, ifName) && ifile < numberOfFiles){
     // Very bad practice to use substring by position, 
     // should be done with TRegex or other regex. 
-    ifTitle        = ifName.substr(52,15);
-    int cRunNumber = atoi(ifName.substr(57,6).c_str());
+    ifTitle    = ifName.substr(52,15);
+    cRunNumber = atoi(ifName.substr(57,6).c_str());
     FaradayReader fReader(ifTitle);
 
     if ( FileIsNewRun() ){      
@@ -119,111 +108,160 @@ void Writer::Execute(int numberOfFiles){
     if (fReader.HasFile()){ 
       ProcessFile(fReader); 
     }
-  
-    ifile++;
-    pRunNumber = cRunNumber;
-  }// end conditional on file open 
-
+  }
   
   runs.close();
 }
 
+bool Writer::FileIsNewRun(){
+  return (cRunNumber != pRunNumber && pRunNumber != 0);
+}
+
 void Writer::PerformEndOfRunAction(){
-  cout << "[Writer::PerformEndOfRunAction] Performing end of run action for file " << ifTitle << " with Run Number " << pRunNumber << endl; 
+  //  cout << "[Writer::PerformEndOfRunAction] Performing end of run action for file " << ifTitle << " with Run Number " << pRunNumber << endl; 
 
-      // this need to be done more carefully so to cut out gaps 
-      // such as .A02 -> .A04 skipping .A03 
-      // I am calling this a 'jump error'
-      int runTotalAccumulation = 0;
-      if (runCharges.size() > 0){
-	for (int i=0; i<runCharges.size()-1; i++){
-	  if (runStubs[i+1]-runStubs[i] <= 1)
-	    runTotalAccumulation += runCharges[i+1] - runCharges[i];
-	}
+  // this need to be done more carefully so to cut out gaps 
+  // such as .A02 -> .A04 skipping .A03 
+  // I am calling this a 'jump error'
+  long int runTotalAccumulation = 0;
+  if (runCharges.size() > 0){
+    runTotalAccumulation = CalculateTotalCharge();
+  }
+  
+  ofstream runAccumulationOut;
+  ofstream e1f_bad_out;
+  
+  runAccumulationOut.open(Form("testOutput/accumulation/%d.fca",pRunNumber),ios::trunc);
+  runAccumulationOut << runTotalAccumulation << " " << lastEvent;
+  runAccumulationOut.close();
+  
+  e1f_bad_out.open(Form("testOutput/badEvents/%d.txt",pRunNumber),ios::trunc);
+  
+  for (int i=0; i< badEventStart.size(); i++) e1f_bad_out << badEventStart[i] << " " << badEventEnd[i] << endl;
+  
+  int numberReadings     = runCharges.size();
+  int numberReadingsGood = runChargesGood.size();
+  
+  if (numberReadings > 1){
+    TH1D *runHisto       = new TH1D(Form("chargeDiff_%d",pRunNumber),Form("%d",pRunNumber),numberReadings-1,1,numberReadings-1); 
+    TH1D *entryHisto     = new TH1D(Form("entryDiff_%d",pRunNumber),Form("%d",pRunNumber),numberReadings-1,1,numberReadings-1); 
+    TH1D *runHistoGood   = new TH1D(Form("chargeDiffGood_%d",pRunNumber),Form("%d",pRunNumber),numberReadingsGood-1,1,numberReadingsGood-1); 
+    TH1D *entryHistoGood = new TH1D(Form("entryDiffGood_%d",pRunNumber),Form("%d",pRunNumber),numberReadingsGood-1,1,numberReadingsGood-1); 
+    
+    for(int i=0; i<numberReadings-1; i++){
+      double chargeDiff = (runCharges[i+1]-runCharges[i])/9624000.0; 
+      double entryDiff  = runEntries[i+1]-runEntries[i];
+      
+      runHisto       ->SetBinContent(i+1,chargeDiff); 
+      entryHisto     ->SetBinContent(i+1,entryDiff); 
+
+      cout.width(16); cout << runStubs[i]; 
+      cout.width(16); cout << runStubs[i+1]; 
+      cout.width(16); cout << runCharges[i]/9624000.0; 
+      cout.width(16); cout << runCharges[i+1]/9624000.0; 
+      cout.width(16); cout << runEntries[i]; 
+      cout.width(16); cout << runEntries[i+1]; 
+      cout.width(16); cout << (runCharges[i+1]-runCharges[i])/9624000.0 << endl; 
+      
+
+    }
+    
+    for(int i=0; i<numberReadings-1; i++){
+      double chargeDiffGood = (runChargesGood[i+1]-runChargesGood[i])/9624000.0; 
+      double entryDiffGood  = runEntriesGood[i+1]-runEntriesGood[i];
+      
+      if(EntryIsGood(i)){
+	runHistoGood   ->SetBinContent(i+1,chargeDiffGood); 
+	entryHistoGood ->SetBinContent(i+1,entryDiffGood); 
       }
-      
-      cout.width(18);
-      cout << pRunNumber;
-      cout.width(18);
-      cout << runTotalAccumulation;
-      cout.width(18);
-      cout << lastEvent << endl;
-      
-      ofstream runAccumulationOut;
-      ofstream e1f_bad_out;
-      
-      runAccumulationOut.open(Form("testOutput/accumulation/%d.fca",pRunNumber),ios::trunc);
-      runAccumulationOut << runTotalAccumulation << " " << lastEvent;
-      runAccumulationOut.close();
+    }
+    
+    runHistos.push_back(runHisto); 
+    runHistos.push_back(entryHisto); 
+    runHistos.push_back(runHistoGood); 
+    runHistos.push_back(entryHistoGood); 
+  }
+  
+  e1f_bad_out   .close();
+  badEventStart .clear();
+  badEventEnd   .clear();
+  runStubs      .clear();
+  runEntries    .clear();
+  runCharges    .clear();
+  runEntriesGood.clear();
+  runChargesGood.clear();
+  eventStatus   .clear();
+  iRunEntry = 1;
+}
 
-      e1f_bad_out.open(Form("testOutput/badEvents/%d.txt",pRunNumber),ios::trunc);
-      
-      for (int i=0; i< badEventStart.size(); i++) e1f_bad_out << badEventStart[i] << " " << badEventEnd[i] << endl;
+long int Writer::CalculateTotalCharge(){
+  long int totalCharge = 0;
+  for(int entry=0; entry<runCharges.size()-1; ++entry){
+    if (EntryIsGood(entry)) { 
+      totalCharge += runCharges[entry+1]-runCharges[entry];
+    }
+  }
+  return totalCharge; 
+}
 
-      int numberReadings = runCharges.size();
-
-      TH1D *runHisto = new TH1D(Form("fcup_%d",pRunNumber),"",numberReadings,1,numberReadings); 
-
-      for(int i=0; i<numberReadings-1; i++){
-	double chargeDiff = runCharges[i+1]-runCharges[i]; 
-	runHisto->SetBinContent(i+1,chargeDiff); 
-      }
-      runHistos.push_back(runHisto); 
-
-      e1f_bad_out.close();
-      badEventStart.clear();
-      badEventEnd.clear();
-      runStubs.clear();
-      runEntries.clear();
-      runCharges.clear();
-      iRunEntry = 1;
+bool Writer::EntryIsGood(int entry){
+  //  return (eventStatus[entry] && eventStatus[entry+1] && (runStubs[entry]-runStubs[entry-1]) == 0);
+  return (eventStatus[entry] && eventStatus[entry+1] && (runStubs[entry]-runStubs[entry-1]) < 2);
 }
 
 void Writer::ProcessFile(FaradayReader fReader){
-
   int runStub = atoi(ifTitle.substr(13,2).c_str());
   nProcessedFiles++;
   
-  cout << "Processing file: " << ifTitle << endl; 
+  cout << Form("Processing file (%d): ",ifile) << ifTitle << endl;
 
   for (int ien = 0; ien < fReader.numberOfEntries()-1; ien++){
     int c = fReader.cdiff(ien, ien+1);
     int e = fReader.ediff(ien, ien+1);
     
-    // throw exception for 0 charge 
-    if (c == 0 && fReader.event(ien) > 0 && fReader.event(ien+1) > 0){
+    if (c == 0){
       if (!BAD){
 	badEventStart.push_back(fReader.event(ien));
       }
-      
       BAD = true;
-      
       nEventsInException += e; 
       nExceptions++;
     }
-    
-    else if (c != 0 && fReader.event(ien) > 0 && fReader.event(ien+1) > 0){
+
+    else if (c != 0) {
       if (BAD){
 	badEventEnd.push_back(fReader.event(ien));
       }
-      
       BAD = false;
       nEventsInNormal += e;
       nNormal++;
     }
-    
+
     runStubs  .push_back(runStub);
-    runEntries.push_back(iRunEntry);
+    runEntries.push_back(fReader.event(ien));
     runCharges.push_back(fReader.charge(ien));
-    
-    lastEvent = fReader.event(ien+1);
-    
-    entries.push_back(iEntry);
-    cdiffs .push_back(c);
-    ediffs .push_back(e);
+
+    if (!BAD) {
+      runEntriesGood.push_back(fReader.event(ien));
+      runChargesGood.push_back(fReader.charge(ien));
+      eventStatus.push_back(1);
+
+      entries.push_back(iEntry);
+      cdiffs .push_back(c);
+      ediffs .push_back(e);
+
+    } else {
+      eventStatus.push_back(0);
+    }
+
+    lastEvent = fReader.event(ien+1);    
     iEntry++;
     iRunEntry++;
   }    
+  
+  pRunNumber = cRunNumber;
+  ifile++;
+  
 }
 
 void Writer::EndJob(){
@@ -232,6 +270,8 @@ void Writer::EndJob(){
   double rException  = (double) nEventsInException/nExceptions;
   double rNormal     = (double) nEventsInNormal/nNormal;
 
+  cout << endl;
+  cout << endl;
   cout << "------------------------------ EndJob -----------------------------" << endl; 
   cout << "exceptions ";
   cout << nExceptions << endl;
