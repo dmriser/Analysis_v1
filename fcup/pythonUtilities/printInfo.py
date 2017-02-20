@@ -18,5 +18,7 @@ with open(infoFile,'rU') as file:
  
 
 charges_np = np.array(charges)
-print(' Total Charge = ', charges_np.sum() )
+print " Total Charge = ", charges_np.sum()
 
+#plt.hist(charges_np)
+#plt.show()
